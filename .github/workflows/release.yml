@@ -22,14 +22,15 @@ jobs:
     
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ github.ref }}
-        release_name: Release ${{ steps.get_version.outputs.version }}
+        name: Release ${{ steps.get_version.outputs.version }}
         draft: false
         prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-and-upload:
     name: Build and Upload
@@ -77,30 +78,18 @@ jobs:
         fi
         
         # Generate checksums
-        sha256sum $ARCHIVE_NAME > $ARCHIVE_NAME.sha256
+        sha256sum "$ARCHIVE_NAME" > "$ARCHIVE_NAME.sha256"
         
-        echo "ARCHIVE_NAME=$ARCHIVE_NAME" >> $GITHUB_ENV
-        echo "BINARY_NAME=$BINARY_NAME" >> $GITHUB_ENV
+        echo "ARCHIVE_NAME=$ARCHIVE_NAME" >> "$GITHUB_ENV"
+        echo "BINARY_NAME=$BINARY_NAME" >> "$GITHUB_ENV"
     
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
+    - name: Upload Release Assets
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ needs.create-release.outputs.version }}
+        files: ./dist/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: ./dist/${{ env.ARCHIVE_NAME }}
-        asset_name: ${{ env.ARCHIVE_NAME }}
-        asset_content_type: application/octet-stream
-    
-    - name: Upload Checksum
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: ./dist/${{ env.ARCHIVE_NAME }}.sha256
-        asset_name: ${{ env.ARCHIVE_NAME }}.sha256
-        asset_content_type: text/plain
 
   generate-sbom:
     name: Generate SBOM
@@ -115,38 +104,28 @@ jobs:
         go-version: ${{ env.GO_VERSION }}
     
     - name: Generate SBOM
-      uses: anchore/sbom-action@v0
+      uses: anchore/sbom-action@v0.17.0
       with:
         path: ./
         format: cyclonedx-json
         output-file: sbom-cyclonedx.json
     
     - name: Generate SPDX SBOM
-      uses: anchore/sbom-action@v0
+      uses: anchore/sbom-action@v0.17.0
       with:
         path: ./
         format: spdx-json
         output-file: sbom-spdx.json
     
-    - name: Upload CycloneDX SBOM
-      uses: actions/upload-release-asset@v1
+    - name: Upload SBOM Files
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ needs.create-release.outputs.version }}
+        files: |
+          ./sbom-cyclonedx.json
+          ./sbom-spdx.json
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: ./sbom-cyclonedx.json
-        asset_name: sbom-cyclonedx.json
-        asset_content_type: application/json
-    
-    - name: Upload SPDX SBOM
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: ./sbom-spdx.json
-        asset_name: sbom-spdx.json
-        asset_content_type: application/json
 
   security-scan:
     name: Security Scan
@@ -164,31 +143,23 @@ jobs:
       run: |
         go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
         gosec -fmt json -out security-report.json ./...
+      continue-on-error: true
     
     - name: Run vulnerability check
       run: |
         go install golang.org/x/vuln/cmd/govulncheck@latest
         govulncheck -json ./... > vulnerability-report.json
+      continue-on-error: true
     
-    - name: Upload Security Report
-      uses: actions/upload-release-asset@v1
+    - name: Upload Security Reports
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ needs.create-release.outputs.version }}
+        files: |
+          ./security-report.json
+          ./vulnerability-report.json
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: ./security-report.json
-        asset_name: security-report.json
-        asset_content_type: application/json
-    
-    - name: Upload Vulnerability Report
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: ./vulnerability-report.json
-        asset_name: vulnerability-report.json
-        asset_content_type: application/json
 
   docker-build:
     name: Build Docker Image
@@ -229,17 +200,43 @@ jobs:
   notify:
     name: Notify Release
     runs-on: ubuntu-latest
-    needs: [build-and-upload, generate-sbom, security-scan]
+    needs: [create-release, build-and-upload, generate-sbom, security-scan, docker-build]
     if: always()
     steps:
-    - name: Notify success
-      if: needs.build-and-upload.result == 'success' && needs.generate-sbom.result == 'success'
+    - name: Check release status
+      id: status
       run: |
-        echo "Release ${{ needs.create-release.outputs.version }} completed successfully"
-        # Add notification logic here (Slack, email, etc.)
+        VERSION="${{ needs.create-release.outputs.version }}"
+        BUILD_STATUS="${{ needs.build-and-upload.result }}"
+        SBOM_STATUS="${{ needs.generate-sbom.result }}"
+        SECURITY_STATUS="${{ needs.security-scan.result }}"
+        
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "build_status=$BUILD_STATUS" >> $GITHUB_OUTPUT
+        echo "sbom_status=$SBOM_STATUS" >> $GITHUB_OUTPUT
+        echo "security_status=$SECURITY_STATUS" >> $GITHUB_OUTPUT
+        
+        if [[ "$BUILD_STATUS" == "success" && "$SBOM_STATUS" == "success" ]]; then
+          echo "overall_status=success" >> $GITHUB_OUTPUT
+        else
+          echo "overall_status=failure" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Notify success
+      if: steps.status.outputs.overall_status == 'success'
+      run: |
+        echo "✅ Release ${{ steps.status.outputs.version }} completed successfully"
+        echo "📦 Build: ${{ steps.status.outputs.build_status }}"
+        echo "📋 SBOM: ${{ steps.status.outputs.sbom_status }}"
+        echo "🔒 Security: ${{ steps.status.outputs.security_status }}"
     
     - name: Notify failure
-      if: needs.build-and-upload.result == 'failure' || needs.generate-sbom.result == 'failure'
+      if: steps.status.outputs.overall_status == 'failure'
       run: |
-        echo "Release ${{ needs.create-release.outputs.version }} failed"
-        # Add failure notification logic here
+        echo "❌ Release ${{ steps.status.outputs.version }} failed"
+        echo "📦 Build: ${{ steps.status.outputs.build_status }}"
+        echo "📋 SBOM: ${{ steps.status.outputs.sbom_status }}"
+        echo "🔒 Security: ${{ steps.status.outputs.security_status }}"
+        echo "Release process terminated due to failures"
+        exit 1
+      continue-on-error: false

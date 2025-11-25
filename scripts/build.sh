@@ -9,7 +9,7 @@ set -euo pipefail
 PROJECT_NAME="ascii-art"
 CMD_PATH="./cmd/ascii-art"
 DIST_DIR="dist"
-GO_VERSION="1.20"
+REQUIRED_GO_VERSION="1.20"
 
 # Colors for output
 RED='\033[0;31m'
@@ -36,10 +36,13 @@ check_go_version() {
         exit 1
     fi
     
-    local go_version=$(go version | cut -d' ' -f3 | sed 's/go//')
-    local required_version="1.20"
+    local go_version=$(go version | awk '{print $3}' | sed 's/go//')
+    local required_version="$REQUIRED_GO_VERSION"
     
-    if ! printf '%s\n%s\n' "$required_version" "$go_version" | sort -V -C; then
+    # Semantic version comparison - check if current version is less than required
+    if printf '%s\n%s\n' "$required_version" "$go_version" | sort -V -C 2>/dev/null; then
+        : # Version is OK
+    else
         log_warn "Go version $go_version detected, $required_version+ recommended"
     fi
 }
@@ -48,10 +51,9 @@ clean() {
     log_info "Cleaning build artifacts..."
     rm -rf "$DIST_DIR"
     go clean -cache
-    go clean -modcache
 }
 
-test() {
+run_tests() {
     log_info "Running tests..."
     go test -race -coverprofile=coverage.out ./...
     
@@ -98,16 +100,25 @@ build_single() {
     
     log_info "Building $binary_name..."
     
-    GOOS=$goos GOARCH=$goarch go build \
+    if ! GOOS=$goos GOARCH=$goarch go build \
         -ldflags="-s -w -X main.version=$version" \
         -o "$output_path" \
-        "$CMD_PATH"
+        "$CMD_PATH"; then
+        log_error "Build failed for $goos/$goarch"
+        return 1
+    fi
     
     # Generate checksum
     if command -v sha256sum &> /dev/null; then
-        (cd "$DIST_DIR" && sha256sum "$binary_name" > "${binary_name}.sha256")
+        if ! (cd "$DIST_DIR" && sha256sum "$binary_name" > "${binary_name}.sha256"); then
+            log_warn "Failed to generate checksum for $binary_name"
+        fi
     elif command -v shasum &> /dev/null; then
-        (cd "$DIST_DIR" && shasum -a 256 "$binary_name" > "${binary_name}.sha256")
+        if ! (cd "$DIST_DIR" && shasum -a 256 "$binary_name" > "${binary_name}.sha256"); then
+            log_warn "Failed to generate checksum for $binary_name"
+        fi
+    else
+        log_warn "No checksum tool available (sha256sum or shasum)"
     fi
     
     log_info "Built: $output_path"
@@ -129,8 +140,8 @@ build_all() {
     )
     
     for platform in "${platforms[@]}"; do
-        local goos=$(echo $platform | cut -d' ' -f1)
-        local goarch=$(echo $platform | cut -d' ' -f2)
+        local goos=$(echo "$platform" | cut -d' ' -f1)
+        local goarch=$(echo "$platform" | cut -d' ' -f2)
         build_single "$goos" "$goarch" "$version"
     done
     
@@ -140,21 +151,29 @@ build_all() {
 package() {
     log_info "Creating release packages..."
     
-    cd "$DIST_DIR"
+    cd "$DIST_DIR" || { log_error "Failed to enter $DIST_DIR"; return 1; }
     
     for file in ascii-art-*; do
         if [[ ! "$file" =~ \.(sha256|zip|tar\.gz)$ ]]; then
             if [[ "$file" =~ windows ]]; then
-                zip "${file%.exe}.zip" "$file" "${file}.sha256"
+                if [[ -f "${file}.sha256" ]]; then
+                    zip "${file%.exe}.zip" "$file" "${file}.sha256"
+                else
+                    zip "${file%.exe}.zip" "$file"
+                fi
                 log_info "Created ${file%.exe}.zip"
             else
-                tar -czf "${file}.tar.gz" "$file" "${file}.sha256"
+                if [[ -f "${file}.sha256" ]]; then
+                    tar -czf "${file}.tar.gz" "$file" "${file}.sha256"
+                else
+                    tar -czf "${file}.tar.gz" "$file"
+                fi
                 log_info "Created ${file}.tar.gz"
             fi
         fi
     done
     
-    cd ..
+    cd .. || { log_error "Failed to return to parent directory"; return 1; }
 }
 
 install_local() {
@@ -223,7 +242,7 @@ main() {
             build_all "${2:-dev}"
             ;;
         "test")
-            test
+            run_tests
             ;;
         "lint")
             lint

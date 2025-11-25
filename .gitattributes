@@ -1,71 +1,23 @@
-# Auto detect text files and perform LF normalization
+# Text files
 * text=auto
 
-# Go source files
+# Go files
 *.go text eol=lf
 
-# Shell scripts
+# Scripts
 *.sh text eol=lf
 
 # Documentation
 *.md text eol=lf
-*.txt text eol=lf
 
-# Configuration files
+# Configuration
 *.yml text eol=lf
-*.yaml text eol=lf
 *.json text eol=lf
-*.toml text eol=lf
 
-# Go specific
-go.mod text eol=lf
-go.sum text eol=lf
-
-# Banner files (critical for consistent output)
+# Banner files
 banners/*.txt text eol=lf
-
-# Golden test files (must be consistent)
-testdata/**/*.golden text eol=lf
-
-# Scripts must be executable
-scripts/*.sh text eol=lf
-
-# Exclude from exports
-.gitattributes export-ignore
-.gitignore export-ignore
-.github/ export-ignore
-scripts/ export-ignore
-testdata/ export-ignore
-*.test export-ignore
-coverage.* export-ignore
-benchmark_*.txt export-ignore
 
 # Binary files
 *.exe binary
-*.dll binary
-*.so binary
-*.dylib binary
 *.zip binary
 *.tar.gz binary
-*.png binary
-*.jpg binary
-*.jpeg binary
-*.gif binary
-*.ico binary
-*.pdf binary
-
-# Linguist overrides for GitHub language detection
-*.md linguist-documentation
-testdata/* linguist-generated
-scripts/* linguist-vendored
-.github/* linguist-vendored
-
-# Security files - ensure proper handling
-SECURITY.md text eol=lf
-*.key text eol=lf
-*.pem text eol=lf
-*.crt text eol=lf
-
-# Diff settings for better code review
-*.go diff=golang
-*.md diff=markdown

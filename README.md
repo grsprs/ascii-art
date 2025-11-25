@@ -1,40 +1,37 @@
-# Ascii-art
+# ASCII Art Generator
 
-[![CI](https://github.com/grsprs/ascii-art/workflows/CI/badge.svg)](https://github.com/grsprs/ascii-art/actions)
-[![Go Version](https://img.shields.io/badge/go-1.20+-blue.svg)](https://golang.org)
-[![Coverage](https://img.shields.io/badge/coverage-85%25-green.svg)](https://github.com/grsprs/ascii-art/actions)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+Convert text into ASCII art banners with different font styles.
 
-Turn text into ASCII art banners with different font styles.
-
-## Quick Install
+## Installation
 
 ```bash
-# Go install
 go install github.com/grsprs/ascii-art/cmd/ascii-art@latest
-
-# Download binary from releases
-curl -L https://github.com/grsprs/ascii-art/releases/latest/download/ascii-art-linux-amd64 -o ascii-art
-chmod +x ascii-art
 ```
 
-## Quick Usage
+## Usage
 
 ```bash
-# Basic usage
 ascii-art "Hello"
-
-# Multi-line input
-ascii-art "Hello\nWorld"
-
-# Different banner style
 ascii-art -banner=shadow "Hello"
-
-# From file
 ascii-art -file=input.txt
+ascii-art -output=output.txt "Hello"
 ```
 
-**Expected output for "Hello":**
+## Options
+
+- `-banner` - Font style: standard, shadow, thinkertoy (default: standard)
+- `-file` - Read input from file
+- `-output` - Write output to file
+- `-version` - Show version
+- `-help` - Show help
+
+## Example
+
+```bash
+ascii-art "Hello"
+```
+
+Output:
 ```
  _    _          _   _          
 | |  | |        | | | |         
@@ -46,60 +43,35 @@ ascii-art -file=input.txt
                                 
 ```
 
-## Banner Formats Supported
-
-- **standard** - Classic ASCII art style
-- **shadow** - Bold shadow effect
-- **thinkertoy** - Decorative style
-
-See [banners/](banners/) directory for format specifications.
-
 ## Features
 
 - All printable ASCII characters (32-126)
 - Multi-line input with `\n`
-- Cross-platform (Windows/Linux/macOS)
-- Input size limit: 1MB (configurable)
-- Deterministic output
-- Zero dependencies (stdlib only)
+- Three font styles
+- Cross-platform compatibility
+- Zero dependencies
+- 1MB input limit
+- Secure path handling
 
-## CLI Reference
+## Development
 
 ```bash
-ascii-art [flags] [text]
-
-Flags:
-  -banner string    Banner style: standard, shadow, thinkertoy (default "standard")
-  -file string      Read input from file
-  -output string    Write output to file (default: stdout)
-  -version          Show version information
-  -help             Show help
+git clone https://github.com/grsprs/ascii-art.git
+cd ascii-art
+go test ./...
+go run ./cmd/ascii-art "Test"
 ```
 
-## Exit Codes
+## Building
 
-- `0` - Success
-- `1` - Invalid arguments
-- `2` - I/O error
-- `3` - Render error
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, and contribution guidelines.
-
-## Security
-
-For security reports, see [SECURITY.md](SECURITY.md).
+```bash
+go build -o ascii-art ./cmd/ascii-art
+```
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file.
+MIT License - see LICENSE file.
 
 ## Author
 
-- Spiros Nikoloudakis (sp.nikoloudakis@gmail.com)
-- November 25, 2024
-
-## Architecture
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for technical details and design decisions.
+Spiros Nikoloudakis (sp.nikoloudakis@gmail.com)

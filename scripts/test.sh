@@ -69,7 +69,14 @@ analyze_coverage() {
     
     echo "Total coverage: ${coverage}%"
     
-    if (( $(echo "$coverage >= $COVERAGE_THRESHOLD" | bc -l) )); then
+    # Check if bc is available, fallback to awk for comparison
+    if command -v bc >/dev/null 2>&1; then
+        comparison_result=$(echo "$coverage >= $COVERAGE_THRESHOLD" | bc -l)
+    else
+        comparison_result=$(awk "BEGIN {print ($coverage >= $COVERAGE_THRESHOLD)}")
+    fi
+    
+    if [ "$comparison_result" = "1" ]; then
         log_info "Coverage threshold met: ${coverage}% >= ${COVERAGE_THRESHOLD}%"
     else
         log_error "Coverage below threshold: ${coverage}% < ${COVERAGE_THRESHOLD}%"
@@ -108,13 +115,13 @@ run_memory_tests() {
     # Test with different input sizes
     local test_inputs=(
         "Hello"
-        "$(printf 'A%.0s' {1..100})"
-        "$(printf 'B%.0s' {1..1000})"
+        "$(printf 'A%.0s' {1..100} 2>/dev/null || echo 'AAAA')"
+        "$(printf 'B%.0s' {1..1000} 2>/dev/null || echo 'BBBB')"
     )
     
     for input in "${test_inputs[@]}"; do
         echo "Testing input size: ${#input} characters"
-        echo "$input" | go run ./cmd/ascii-art 2>/dev/null >/dev/null
+        go run ./cmd/ascii-art "$input" 2>/dev/null >/dev/null
     done
     
     log_info "Memory tests completed"
@@ -153,7 +160,7 @@ run_integration_tests() {
     
     for test_case in "${test_cases[@]}"; do
         echo "Testing: $test_case"
-        eval "$binary $test_case" >/dev/null
+        "$binary" "$test_case" >/dev/null
         if [ $? -eq 0 ]; then
             echo "✓ Passed"
         else
@@ -163,9 +170,12 @@ run_integration_tests() {
     done
     
     # Test file input
-    echo "Hello World" > test_input.txt
+    if ! echo "Hello World" > test_input.txt; then
+        log_error "Failed to create test file"
+        return 1
+    fi
     "$binary" -file=test_input.txt >/dev/null
-    rm -f test_input.txt
+    trap 'rm -f test_input.txt' EXIT
     
     # Test different banners
     for banner in standard shadow thinkertoy; do
@@ -293,11 +303,11 @@ EOF
 main() {
     case "${1:-all}" in
         "all")
-            validate_test_data
-            run_unit_tests
+            validate_test_data || exit 1
+            run_unit_tests || exit 1
             run_golden_tests
-            run_integration_tests
-            analyze_coverage
+            run_integration_tests || exit 1
+            analyze_coverage || exit 1
             package_coverage
             print_summary
             ;;
