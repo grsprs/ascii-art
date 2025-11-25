@@ -1,14 +1,14 @@
 # Security Policy
 
-## Reporting Security Vulnerabilities
+## Reporting Security Issues
 
-We take security seriously. Please report security vulnerabilities responsibly.
+Found a security problem? Here's how to report it safely.
 
 ### Contact Method
 
-**Email**: security@example.com  
-**Response Time**: We acknowledge reports within 48 hours  
-**PGP Key**: Available at https://example.com/pgp-key.asc (optional)
+**Email**: sp.nikoloudakis@gmail.com  
+**Response Time**: Reports acknowledged within 48 hours  
+**Subject**: Please use [SECURITY] in the subject line
 
 ### What to Include
 
@@ -188,5 +188,9 @@ go build ./cmd/ascii-art
 For non-security issues, use GitHub issues.  
 For security concerns, use the contact method above.
 
-**Security Team**: security@example.com  
-**Maintainer**: maintainer@example.com
+**Security Contact**: sp.nikoloudakis@gmail.com  
+**Project Author**: Spiros Nikoloudakis
+
+---
+
+**Last updated: November 25, 2024**

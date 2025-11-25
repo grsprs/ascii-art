@@ -1,4 +1,6 @@
-# CLI API Specification
+# CLI Reference
+
+Complete guide to using the ascii-art command line tool.
 
 ## Command Syntax
 
@@ -253,3 +255,8 @@ banner:
 - 6-month notice for breaking changes
 - Migration guides provided
 - Legacy flag support during transition
+
+---
+
+**CLI designed by Spiros Nikoloudakis (sp.nikoloudakis@gmail.com)**  
+**Last updated: November 25, 2024**

@@ -1,20 +1,20 @@
 # Ascii-art
 
-[![CI](https://github.com/username/ascii-art/workflows/CI/badge.svg)](https://github.com/username/ascii-art/actions)
+[![CI](https://github.com/spirosnikoloudakis/ascii-art/workflows/CI/badge.svg)](https://github.com/spirosnikoloudakis/ascii-art/actions)
 [![Go Version](https://img.shields.io/badge/go-1.20+-blue.svg)](https://golang.org)
-[![Coverage](https://img.shields.io/badge/coverage-85%25-green.svg)](https://github.com/username/ascii-art/actions)
+[![Coverage](https://img.shields.io/badge/coverage-85%25-green.svg)](https://github.com/spirosnikoloudakis/ascii-art/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Render text as ASCII banners using customizable banner files. Supports multi-line input, custom banners (standard/shadow/thinkertoy), and safe CLI usage.
+Turn text into ASCII art banners with different font styles.
 
 ## Quick Install
 
 ```bash
 # Go install
-go install github.com/username/ascii-art/cmd/ascii-art@latest
+go install github.com/spirosnikoloudakis/ascii-art/cmd/ascii-art@latest
 
-# Or download binary from releases
-curl -L https://github.com/username/ascii-art/releases/latest/download/ascii-art-linux-amd64 -o ascii-art
+# Download binary from releases
+curl -L https://github.com/spirosnikoloudakis/ascii-art/releases/latest/download/ascii-art-linux-amd64 -o ascii-art
 chmod +x ascii-art
 ```
 
@@ -54,14 +54,14 @@ ascii-art -file=input.txt
 
 See [banners/](banners/) directory for format specifications.
 
-## Features & Limits
+## Features
 
-- ✅ All printable ASCII characters (32-126)
-- ✅ Multi-line input with `\n`
-- ✅ Cross-platform (Windows/Linux/macOS)
-- ✅ Input size limit: 1MB (configurable)
-- ✅ Deterministic output
-- ✅ Zero dependencies (stdlib only)
+- All printable ASCII characters (32-126)
+- Multi-line input with `\n`
+- Cross-platform (Windows/Linux/macOS)
+- Input size limit: 1MB (configurable)
+- Deterministic output
+- Zero dependencies (stdlib only)
 
 ## CLI Reference
 
@@ -95,9 +95,10 @@ For security reports, see [SECURITY.md](SECURITY.md).
 
 MIT License - see [LICENSE](LICENSE) file.
 
-## Maintainers
+## Author
 
-- [@maintainer](https://github.com/maintainer)
+- Spiros Nikoloudakis (sp.nikoloudakis@gmail.com)
+- November 25, 2024
 
 ## Architecture
 

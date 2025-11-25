@@ -1,0 +1,107 @@
+name: Security Report
+description: Report a security vulnerability (use private reporting for sensitive issues)
+title: "[SECURITY] "
+labels: ["security", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠️ **IMPORTANT**: For sensitive security vulnerabilities, please use GitHub's private vulnerability reporting or email security@example.com instead of creating a public issue.
+        
+        This template is for security-related issues that are not sensitive or for general security improvements.
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Security Issue Type
+      description: What type of security issue is this?
+      options:
+        - General security improvement
+        - Non-sensitive vulnerability
+        - Security documentation issue
+        - Dependency security update
+        - Security testing enhancement
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Security Issue Description
+      description: Describe the security concern
+      placeholder: Clear description of the security issue or improvement needed
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Potential Impact
+      description: What could be the impact if this issue is not addressed?
+      placeholder: |
+        - Confidentiality impact: 
+        - Integrity impact:
+        - Availability impact:
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce (if applicable)
+      description: How to reproduce this security issue
+      placeholder: |
+        1. Step one
+        2. Step two
+        3. Observe security issue
+
+  - type: textarea
+    id: mitigation
+    attributes:
+      label: Suggested Mitigation
+      description: Any suggestions for fixing or mitigating this issue
+      placeholder: Proposed solution or workaround
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Estimated Severity
+      description: Your assessment of the severity
+      options:
+        - Low - Minor security improvement
+        - Medium - Moderate security concern
+        - High - Significant security issue
+        - Critical - Severe security vulnerability
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Details
+      description: Environment where this was discovered
+      placeholder: |
+        - OS: 
+        - Go version:
+        - ascii-art version:
+        - Additional context:
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Security Checklist
+      options:
+        - label: I have verified this is not a sensitive vulnerability requiring private disclosure
+          required: true
+        - label: I have searched for existing security issues
+          required: true
+        - label: I understand the responsible disclosure process
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        **For sensitive vulnerabilities**: Please use private reporting or email security@example.com with PGP encryption if available.

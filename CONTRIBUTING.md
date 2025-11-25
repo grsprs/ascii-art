@@ -1,6 +1,6 @@
-# Contributing to Ascii-art
+# Contributing
 
-Thank you for your interest in contributing! This document provides guidelines for contributors and enterprise reviewers.
+Thanks for your interest in contributing to this project. Here's what you need to know to get started.
 
 ## Developer Setup
 
@@ -14,7 +14,7 @@ Thank you for your interest in contributing! This document provides guidelines f
 
 ```bash
 # Clone repository
-git clone https://github.com/username/ascii-art.git
+git clone https://github.com/spirosnikoloudakis/ascii-art.git
 cd ascii-art
 
 # Verify setup
@@ -192,7 +192,12 @@ go test -bench=. ./...
 
 ## Recognition
 
-Contributors are recognized in:
-- CHANGELOG.md for significant contributions
+Contributors get credit in:
+- CHANGELOG.md for major contributions
 - GitHub contributors page
-- Release notes for major features
+- Release notes for new features
+
+---
+
+**Project maintained by Spiros Nikoloudakis (sp.nikoloudakis@gmail.com)**  
+**Last updated: November 25, 2024**

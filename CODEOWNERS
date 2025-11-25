@@ -1,0 +1,16 @@
+# Global code owners
+* @spirosnikoloudakis
+
+# Critical directories
+/banners/ @spirosnikoloudakis
+/internal/security/ @spirosnikoloudakis
+/.github/ @spirosnikoloudakis
+/cmd/ @spirosnikoloudakis
+
+# Documentation
+*.md @spirosnikoloudakis
+LICENSE @spirosnikoloudakis
+
+# Configuration files
+go.mod @spirosnikoloudakis
+go.sum @spirosnikoloudakis

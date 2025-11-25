@@ -1,5 +1,7 @@
 # Architecture Documentation
 
+This document explains how the ASCII art tool works internally.
+
 ## High-Level Overview
 
 ```
@@ -249,3 +251,8 @@ Source Code → Go Build → Static Binary → Multi-platform Release
 - CLI flags for runtime options
 - Environment variables for defaults
 - Configuration files (future enhancement)
+
+---
+
+**Architecture designed by Spiros Nikoloudakis (sp.nikoloudakis@gmail.com)**  
+**Last updated: November 25, 2024**

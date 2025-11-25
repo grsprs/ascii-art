@@ -1,0 +1,245 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  GO_VERSION: '1.20'
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+    - name: Get version
+      id: get_version
+      run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+    
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ steps.get_version.outputs.version }}
+        draft: false
+        prerelease: false
+
+  build-and-upload:
+    name: Build and Upload
+    runs-on: ubuntu-latest
+    needs: create-release
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: [amd64, arm64]
+        exclude:
+          - goos: windows
+            goarch: arm64
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    
+    - name: Build binary
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+        VERSION: ${{ needs.create-release.outputs.version }}
+      run: |
+        mkdir -p dist
+        EXT=""
+        if [ "$GOOS" = "windows" ]; then EXT=".exe"; fi
+        
+        BINARY_NAME="ascii-art-$GOOS-$GOARCH$EXT"
+        LDFLAGS="-s -w -X main.version=$VERSION"
+        
+        go build -ldflags="$LDFLAGS" -o dist/$BINARY_NAME ./cmd/ascii-art
+        
+        # Create archive
+        cd dist
+        if [ "$GOOS" = "windows" ]; then
+          zip ascii-art-$GOOS-$GOARCH.zip $BINARY_NAME
+          ARCHIVE_NAME="ascii-art-$GOOS-$GOARCH.zip"
+        else
+          tar -czf ascii-art-$GOOS-$GOARCH.tar.gz $BINARY_NAME
+          ARCHIVE_NAME="ascii-art-$GOOS-$GOARCH.tar.gz"
+        fi
+        
+        # Generate checksums
+        sha256sum $ARCHIVE_NAME > $ARCHIVE_NAME.sha256
+        
+        echo "ARCHIVE_NAME=$ARCHIVE_NAME" >> $GITHUB_ENV
+        echo "BINARY_NAME=$BINARY_NAME" >> $GITHUB_ENV
+    
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ./dist/${{ env.ARCHIVE_NAME }}
+        asset_name: ${{ env.ARCHIVE_NAME }}
+        asset_content_type: application/octet-stream
+    
+    - name: Upload Checksum
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ./dist/${{ env.ARCHIVE_NAME }}.sha256
+        asset_name: ${{ env.ARCHIVE_NAME }}.sha256
+        asset_content_type: text/plain
+
+  generate-sbom:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+    needs: create-release
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    
+    - name: Generate SBOM
+      uses: anchore/sbom-action@v0
+      with:
+        path: ./
+        format: cyclonedx-json
+        output-file: sbom-cyclonedx.json
+    
+    - name: Generate SPDX SBOM
+      uses: anchore/sbom-action@v0
+      with:
+        path: ./
+        format: spdx-json
+        output-file: sbom-spdx.json
+    
+    - name: Upload CycloneDX SBOM
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ./sbom-cyclonedx.json
+        asset_name: sbom-cyclonedx.json
+        asset_content_type: application/json
+    
+    - name: Upload SPDX SBOM
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ./sbom-spdx.json
+        asset_name: sbom-spdx.json
+        asset_content_type: application/json
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: create-release
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    
+    - name: Run security scan
+      run: |
+        go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+        gosec -fmt json -out security-report.json ./...
+    
+    - name: Run vulnerability check
+      run: |
+        go install golang.org/x/vuln/cmd/govulncheck@latest
+        govulncheck -json ./... > vulnerability-report.json
+    
+    - name: Upload Security Report
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ./security-report.json
+        asset_name: security-report.json
+        asset_content_type: application/json
+    
+    - name: Upload Vulnerability Report
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ./vulnerability-report.json
+        asset_name: vulnerability-report.json
+        asset_content_type: application/json
+
+  docker-build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: create-release
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ github.repository }}
+        tags: |
+          type=ref,event=tag
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+  notify:
+    name: Notify Release
+    runs-on: ubuntu-latest
+    needs: [build-and-upload, generate-sbom, security-scan]
+    if: always()
+    steps:
+    - name: Notify success
+      if: needs.build-and-upload.result == 'success' && needs.generate-sbom.result == 'success'
+      run: |
+        echo "Release ${{ needs.create-release.outputs.version }} completed successfully"
+        # Add notification logic here (Slack, email, etc.)
+    
+    - name: Notify failure
+      if: needs.build-and-upload.result == 'failure' || needs.generate-sbom.result == 'failure'
+      run: |
+        echo "Release ${{ needs.create-release.outputs.version }} failed"
+        # Add failure notification logic here

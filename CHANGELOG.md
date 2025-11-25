@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation framework
 - Security policy
 - Contributing guidelines
+- Author: Spiros Nikoloudakis
+- Date: November 25, 2024
 
 ## [1.0.0] - 2024-01-XX
 
