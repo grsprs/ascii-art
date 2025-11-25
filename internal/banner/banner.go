@@ -57,14 +57,18 @@ func Load(filename string) (map[rune][]string, error) {
 		return nil, fmt.Errorf("invalid banner file format: expected at least %d lines, got %d", expectedLines, len(lines))
 	}
 	
-	// Parse printable ASCII characters
+	// Parse printable ASCII characters with validated bounds
 	for i := 0; i < charCount; i++ {
 		char := rune(asciiStart + i)
 		start := i * (linesPerChar + separatorLines)
-		if start+linesPerChar-1 >= len(lines) {
+		end := start + linesPerChar
+		
+		// Double-check bounds even after upfront validation
+		if end > len(lines) {
 			return nil, fmt.Errorf("invalid banner file format: insufficient lines for character %c", char)
 		}
-		banner[char] = lines[start : start+linesPerChar]
+		
+		banner[char] = lines[start:end]
 	}
 
 	return banner, nil

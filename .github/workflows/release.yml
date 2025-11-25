@@ -210,13 +210,16 @@ jobs:
         BUILD_STATUS="${{ needs.build-and-upload.result }}"
         SBOM_STATUS="${{ needs.generate-sbom.result }}"
         SECURITY_STATUS="${{ needs.security-scan.result }}"
+        DOCKER_STATUS="${{ needs.docker-build.result }}"
+        DOCKER_STATUS="${DOCKER_STATUS:-skipped}"
         
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "build_status=$BUILD_STATUS" >> $GITHUB_OUTPUT
         echo "sbom_status=$SBOM_STATUS" >> $GITHUB_OUTPUT
         echo "security_status=$SECURITY_STATUS" >> $GITHUB_OUTPUT
+        echo "docker_status=$DOCKER_STATUS" >> $GITHUB_OUTPUT
         
-        if [[ "$BUILD_STATUS" == "success" && "$SBOM_STATUS" == "success" ]]; then
+        if [[ "$BUILD_STATUS" == "success" && "$SBOM_STATUS" == "success" && "$DOCKER_STATUS" == "success" ]]; then
           echo "overall_status=success" >> $GITHUB_OUTPUT
         else
           echo "overall_status=failure" >> $GITHUB_OUTPUT
@@ -229,6 +232,7 @@ jobs:
         echo "📦 Build: ${{ steps.status.outputs.build_status }}"
         echo "📋 SBOM: ${{ steps.status.outputs.sbom_status }}"
         echo "🔒 Security: ${{ steps.status.outputs.security_status }}"
+        echo "🐳 Docker: ${{ steps.status.outputs.docker_status }}"
     
     - name: Notify failure
       if: steps.status.outputs.overall_status == 'failure'
@@ -237,6 +241,7 @@ jobs:
         echo "📦 Build: ${{ steps.status.outputs.build_status }}"
         echo "📋 SBOM: ${{ steps.status.outputs.sbom_status }}"
         echo "🔒 Security: ${{ steps.status.outputs.security_status }}"
+        echo "🐳 Docker: ${{ steps.status.outputs.docker_status }}"
         echo "Release process terminated due to failures"
         exit 1
       continue-on-error: false
