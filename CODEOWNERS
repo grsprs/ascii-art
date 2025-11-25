@@ -1,16 +1,16 @@
 # Global code owners
-* @spirosnikoloudakis
+* @grsprs
 
 # Critical directories
-/banners/ @spirosnikoloudakis
-/internal/security/ @spirosnikoloudakis
-/.github/ @spirosnikoloudakis
-/cmd/ @spirosnikoloudakis
+/banners/ @grsprs
+/internal/security/ @grsprs
+/.github/ @grsprs
+/cmd/ @grsprs
 
 # Documentation
-*.md @spirosnikoloudakis
-LICENSE @spirosnikoloudakis
+*.md @grsprs
+LICENSE @grsprs
 
 # Configuration files
-go.mod @spirosnikoloudakis
-go.sum @spirosnikoloudakis
+go.mod @grsprs
+go.sum @grsprs

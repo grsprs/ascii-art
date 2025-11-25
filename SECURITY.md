@@ -132,7 +132,7 @@ Environment:
 ```bash
 # Safe testing environment
 docker run -it --rm golang:1.20
-git clone https://github.com/username/ascii-art.git
+git clone https://github.com/grsprs/ascii-art.git
 cd ascii-art
 go build ./cmd/ascii-art
 ```

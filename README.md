@@ -1,8 +1,8 @@
 # Ascii-art
 
-[![CI](https://github.com/spirosnikoloudakis/ascii-art/workflows/CI/badge.svg)](https://github.com/spirosnikoloudakis/ascii-art/actions)
+[![CI](https://github.com/grsprs/ascii-art/workflows/CI/badge.svg)](https://github.com/grsprs/ascii-art/actions)
 [![Go Version](https://img.shields.io/badge/go-1.20+-blue.svg)](https://golang.org)
-[![Coverage](https://img.shields.io/badge/coverage-85%25-green.svg)](https://github.com/spirosnikoloudakis/ascii-art/actions)
+[![Coverage](https://img.shields.io/badge/coverage-85%25-green.svg)](https://github.com/grsprs/ascii-art/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Turn text into ASCII art banners with different font styles.
@@ -11,10 +11,10 @@ Turn text into ASCII art banners with different font styles.
 
 ```bash
 # Go install
-go install github.com/spirosnikoloudakis/ascii-art/cmd/ascii-art@latest
+go install github.com/grsprs/ascii-art/cmd/ascii-art@latest
 
 # Download binary from releases
-curl -L https://github.com/spirosnikoloudakis/ascii-art/releases/latest/download/ascii-art-linux-amd64 -o ascii-art
+curl -L https://github.com/grsprs/ascii-art/releases/latest/download/ascii-art-linux-amd64 -o ascii-art
 chmod +x ascii-art
 ```
 

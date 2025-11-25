@@ -14,7 +14,7 @@ Thanks for your interest in contributing to this project. Here's what you need t
 
 ```bash
 # Clone repository
-git clone https://github.com/spirosnikoloudakis/ascii-art.git
+git clone https://github.com/grsprs/ascii-art.git
 cd ascii-art
 
 # Verify setup

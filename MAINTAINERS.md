@@ -4,7 +4,7 @@
 
 **Spiros Nikoloudakis**
 - Email: sp.nikoloudakis@gmail.com
-- GitHub: @spirosnikoloudakis
+- GitHub: @grsprs
 - Role: Project creator and primary maintainer
 
 ## Responsibilities
